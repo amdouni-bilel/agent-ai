@@ -62,3 +62,78 @@ print(f"Taux de bonnes réponses : {precision:.0%}")
 
 print("Matrice de confusion :")
 print(confusion_matrix(y_test, predictions))
+
+from sklearn.tree import export_text
+
+
+print(export_text(
+    modele,
+    feature_names=list(X.columns)
+))
+
+importances = pd.Series(
+    modele.feature_importances_,
+    index=X.columns
+).sort_values(ascending=False)
+
+print(importances.round(2))
+
+
+# Étape 4 : predire le modèle
+nouveaux_clients = pd.DataFrame({
+    "anciennete_mois": [3, 48],
+    "nb_achats": [2, 25],
+    "montant_moyen": [90.0, 210.0],
+    "reclamations": [4, 0],
+})
+
+resultats = modele.predict(nouveaux_clients)
+probas = modele.predict_proba(nouveaux_clients)
+
+for i in range(len(nouveaux_clients)):
+    decision = "VA PARTIR" if resultats[i] == 1 else "reste fidèle"
+
+    print(
+        f"Client {i + 1} : {decision} "
+        f"(probabilité de départ : {probas[i][1]:.0%})"
+    )
+
+
+import joblib 
+joblib.dump(modele, "modele_clients.pkl") 
+print("Modèle sauvegardé dans modele_clients.pkl")
+
+
+# Ameliorer modele 
+
+## Étape 1 : charger les données
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+
+
+# Random Forest
+foret = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
+
+foret.fit(X_train, y_train)
+
+print(
+    f"Random Forest : "
+    f"{accuracy_score(y_test, foret.predict(X_test)):.0%}"
+)
+
+
+# Régression logistique
+logistique = LogisticRegression(
+    max_iter=1000
+)
+
+logistique.fit(X_train, y_train)
+
+print(
+    f"Régression logistique : "
+    f"{accuracy_score(y_test, logistique.predict(X_test)):.0%}"
+)
+
